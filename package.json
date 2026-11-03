@@ -1,0 +1,93 @@
+{
+  "name": "vscode-ansible-trace",
+  "displayName": "Ansible Variable Trace",
+  "description": "Trace Ansible variables across inventory, roles, tasks, and templates with an interactive graph visualization.",
+  "version": "0.1.0",
+  "publisher": "the-matt-moo",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Visualization",
+    "Other"
+  ],
+  "keywords": [
+    "ansible",
+    "variable",
+    "trace",
+    "graph",
+    "visualization",
+    "precedence"
+  ],
+  "activationEvents": [
+    "workspaceContains:**/ansible.cfg",
+    "workspaceContains:**/galaxy.yml",
+    "workspaceContains:**/roles/*/tasks/main.yml",
+    "workspaceContains:**/inventory/*.yml"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "ansible-trace.traceVariable",
+        "title": "Trace Ansible Variable",
+        "category": "Ansible Trace"
+      },
+      {
+        "command": "ansible-trace.showProjectGraph",
+        "title": "Show Variable Graph",
+        "category": "Ansible Trace"
+      },
+      {
+        "command": "ansible-trace.showPrecedence",
+        "title": "Show Precedence Simulator",
+        "category": "Ansible Trace"
+      },
+      {
+        "command": "ansible-trace.refresh",
+        "title": "Refresh Variable Index",
+        "category": "Ansible Trace"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "ansible-trace.traceVariable",
+          "when": "editorLangId =~ /yaml|ansible|jinja/",
+          "group": "navigation@10"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "ansible-trace.traceVariable",
+        "key": "ctrl+shift+t",
+        "mac": "cmd+shift+t",
+        "when": "editorLangId =~ /yaml|ansible|jinja/"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "package": "vsce package",
+    "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.20.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@xyflow/react": "^12.4.0",
+    "elkjs": "^0.9.3",
+    "js-yaml": "^4.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}
