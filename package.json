@@ -45,6 +45,11 @@
         "category": "Ansible Trace"
       },
       {
+        "command": "ansible-trace.showFlow",
+        "title": "Show Playbook/Role Flow",
+        "category": "Ansible Trace"
+      },
+      {
         "command": "ansible-trace.refresh",
         "title": "Refresh Variable Index",
         "category": "Ansible Trace"

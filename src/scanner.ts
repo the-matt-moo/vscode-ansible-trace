@@ -88,7 +88,7 @@ function extractRoleName(parts: string[]): string {
 
 // ── File discovery ──
 
-function findYamlFiles(root: string): string[] {
+export function findYamlFiles(root: string): string[] {
   const results: string[] = [];
   const ignore = new Set(['.git', 'node_modules', '.tox', '__pycache__', 'collections', 'ansible_collections']);
 

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import type { ExtToWebview, WebviewToExt, TraceResult, PrecedenceResult } from './types.js';
+import type { ExtToWebview, WebviewToExt, TraceResult, PrecedenceResult, FlowGraph } from './types.js';
 
 export class TracePanel {
   public static currentPanel: TracePanel | undefined;
@@ -60,6 +60,10 @@ export class TracePanel {
 
   sendInventories(files: string[]) {
     this._post({ type: 'setInventories', data: files });
+  }
+
+  sendFlow(data: FlowGraph) {
+    this._post({ type: 'setFlow', data });
   }
 
   sendVariableList(names: string[]) {

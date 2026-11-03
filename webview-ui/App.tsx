@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { TraceGraph } from './components/TraceGraph';
 import { PrecedencePanel } from './components/PrecedencePanel';
-import type { TraceResult, PrecedenceResult, ExtToWebview, WebviewToExt } from '../src/types';
+import { FlowView } from './components/FlowView';
+import type { TraceResult, PrecedenceResult, FlowGraph, ExtToWebview, WebviewToExt } from '../src/types';
 
 // VS Code API handle
 declare function acquireVsCodeApi(): {
@@ -12,12 +13,13 @@ declare function acquireVsCodeApi(): {
 
 const vscode = acquireVsCodeApi();
 
-type Tab = 'trace' | 'precedence';
+type Tab = 'trace' | 'precedence' | 'flow';
 
 export function App() {
   const [tab, setTab] = useState<Tab>('trace');
   const [trace, setTrace] = useState<TraceResult | null>(null);
   const [precedence, setPrecedence] = useState<PrecedenceResult | null>(null);
+  const [flow, setFlow] = useState<FlowGraph | null>(null);
   const [inventories, setInventories] = useState<string[]>([]);
   const [variables, setVariables] = useState<string[]>([]);
   const [search, setSearch] = useState('');
@@ -33,6 +35,10 @@ export function App() {
         case 'setPrecedence':
           setPrecedence(msg.data);
           setTab('precedence');
+          break;
+        case 'setFlow':
+          setFlow(msg.data);
+          setTab('flow');
           break;
         case 'setInventories':
           setInventories(msg.data);
@@ -94,6 +100,15 @@ export function App() {
         >
           Precedence
         </button>
+        <button
+          onClick={() => {
+            setTab('flow');
+            vscode.postMessage({ type: 'requestFlow' }); // always fresh
+          }}
+          style={tabStyle(tab === 'flow')}
+        >
+          Flow
+        </button>
         <span style={{ flex: 1 }} />
         <input
           type="text"
@@ -154,6 +169,11 @@ export function App() {
                 onResolve={resolvePrecedence}
               />
             : <EmptyState text="Select a variable and inventory to see precedence resolution." />
+        )}
+        {tab === 'flow' && (
+          flow
+            ? <FlowView flow={flow} onJump={jumpToSource} />
+            : <EmptyState text="Click Flow or run 'Show Playbook/Role Flow' to map playbooks, roles, and task files." />
         )}
       </div>
     </div>

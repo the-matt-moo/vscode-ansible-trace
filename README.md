@@ -34,6 +34,15 @@ Shows how Ansible ranks every definition of the traced variable:
 
 Opening the tab uses the variable you last traced.
 
+### Flow tab
+Maps how playbooks reach roles and task files: playbook → role → task file → included task file or role. Click **Flow** in the panel, or run **Show Playbook/Role Flow**.
+
+- Solid edges: static (`import_*`, `roles:`, meta `dependencies:`). Dashed edges: dynamic (`include_*`).
+- Edge captions appear only on conditional (`when:`) edges.
+- Dynamic references that cannot be resolved (for example `{{ _item }}` in a file name) appear as red dashed **dynamic** nodes.
+- Collection-qualified names (`opennebula.deploy.pre`, `opennebula.deploy.helper.facts`) resolve to this repo's `playbooks/` and `roles/`.
+- `{{ role_path }}` resolves to the role containing the reference.
+
 ### Commands
 
 | Command | Keybinding | Purpose |
@@ -41,6 +50,7 @@ Opening the tab uses the variable you last traced.
 | Trace Ansible Variable | `Ctrl+Shift+T` (`Cmd+Shift+T` on macOS) | Trace the variable at the cursor, or pick one from a list |
 | Show Variable Graph | none | Pick a variable and open the trace graph |
 | Show Precedence Simulator | none | Open the precedence tab for the last traced variable |
+| Show Playbook/Role Flow | none | Open the Flow tab |
 | Refresh Variable Index | none | Rescan the workspace |
 
 ## What it scans
@@ -85,7 +95,8 @@ npx @vscode/vsce package
 1. **Scanner** (`src/scanner.ts`): walks the workspace, classifies files by Ansible layout, and extracts definitions and usages.
 2. **Graph builder** (`src/graphBuilder.ts`): builds the provenance, selected, and children graph for one variable. Dotted names such as `features.prometheus` match their root and children.
 3. **Resolver** (`src/resolver.ts`): ranks definitions by precedence for the Precedence tab.
-4. **Webview** (`webview-ui/`): React Flow for the canvas, ELK.js for layout.
+4. **Flow scanner** (`src/flow.ts`): follows `import_*`/`include_*`, `roles:`, and meta dependencies from playbooks through roles to task files.
+5. **Webview** (`webview-ui/`): React Flow for the canvas, ELK.js for layout.
 
 ## Limitations
 
@@ -95,6 +106,8 @@ npx @vscode/vsce package
 - Ties in precedence are broken by scan order, not Ansible's real load order.
 - `group_vars/` and `host_vars/` are not yet matched to the groups and hosts in the chosen inventory, so "(all inventories)" can mix values Ansible would never load together.
 - Vault-encrypted files are skipped.
+- Flow: handler (`handlers/`) relationships are not mapped yet.
+- Flow: only playbooks in `playbooks/` (or other non-role, non-inventory YAML that contains plays) are treated as entry points.
 
 ## Development
 
@@ -107,7 +120,7 @@ npx tsc --noEmit -p webview-ui/tsconfig.json
 Layout:
 
 ```
-src/             extension host: scanner, graph builder, resolver, panel
+src/             extension host: scanner, graph builder, resolver, flow scanner, panel
 webview-ui/      React app: App, TraceGraph, VariableNode, PrecedencePanel
 .vscode/         F5 launch config and build task
 esbuild.js       dual bundle (extension + webview)

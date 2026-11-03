@@ -3,6 +3,7 @@ import { scanWorkspace } from './scanner.js';
 import { buildTraceGraph } from './graphBuilder.js';
 import { resolveVariable, listAllVariables } from './resolver.js';
 import { TracePanel } from './webviewPanel.js';
+import { scanFlow } from './flow.js';
 import type { ScanResult, WebviewToExt } from './types.js';
 
 let scanResult: ScanResult | undefined;
@@ -16,6 +17,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('ansible-trace.showProjectGraph', () => showGraph(context)),
     vscode.commands.registerCommand('ansible-trace.showPrecedence', () => showPrecedence(context)),
     vscode.commands.registerCommand('ansible-trace.refresh', () => refresh()),
+    vscode.commands.registerCommand('ansible-trace.showFlow', () => showFlow(context)),
   );
 
   // ── Auto-scan on activation ──
@@ -122,6 +124,19 @@ async function showPrecedence(context: vscode.ExtensionContext) {
   panel.sendVariableList(allVars);
 }
 
+// ── Flow tab (playbooks -> roles -> task files) ──
+
+function showFlow(context: vscode.ExtensionContext) {
+  const panel = TracePanel.createOrShow(context.extensionUri);
+  sendFlowTo(panel);
+}
+
+function sendFlowTo(panel: TracePanel) {
+  const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  if (!root) return;
+  panel.sendFlow(scanFlow(root));
+}
+
 // ── Panel wiring ──
 
 function showTracePanel(context: vscode.ExtensionContext, scan: ScanResult, varName: string) {
@@ -141,18 +156,26 @@ function setupPanelHandlers(panel: TracePanel, context: vscode.ExtensionContext,
       case 'jumpToSource': {
         const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         if (!root) return;
-        const uri = vscode.Uri.file(`${root}/${msg.file}`);
-        const doc = await vscode.workspace.openTextDocument(uri);
-        const editor = await vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
-        const line = Math.max(0, msg.line - 1);
-        const range = new vscode.Range(line, 0, line, 0);
-        editor.selection = new vscode.Selection(range.start, range.start);
-        editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+        try {
+          const uri = vscode.Uri.file(`${root}/${msg.file}`);
+          const doc = await vscode.workspace.openTextDocument(uri);
+          const editor = await vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
+          const line = Math.max(0, msg.line - 1);
+          const range = new vscode.Range(line, 0, line, 0);
+          editor.selection = new vscode.Selection(range.start, range.start);
+          editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+        } catch {
+          vscode.window.showWarningMessage(`Ansible Trace: cannot open ${msg.file}`);
+        }
         break;
       }
       case 'traceVariable': {
         const trace = buildTraceGraph(scan, msg.name);
         panel.sendTrace(trace);
+        break;
+      }
+      case 'requestFlow': {
+        sendFlowTo(panel);
         break;
       }
       case 'resolvePrecedence': {

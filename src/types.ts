@@ -91,6 +91,35 @@ export interface PrecedenceResult {
   resolvedValue: unknown;
 }
 
+// ── Flow graph model (playbooks -> roles -> task files) ──
+
+export type FlowNodeKind = 'playbook' | 'role' | 'tasks' | 'unresolved';
+
+export interface FlowNode {
+  id: string;
+  kind: FlowNodeKind;
+  label: string;
+  file: string;       // workspace-relative; for unresolved, the referencing file
+  line: number;
+}
+
+export interface FlowEdge {
+  id: string;
+  source: string;
+  target: string;
+  /** runs: play -> role. imports: playbook -> playbook. contains: role -> its tasks/main.yml.
+   *  includes: tasks -> tasks. calls: tasks -> role. depends: role -> role meta dependency. */
+  kind: 'runs' | 'imports' | 'contains' | 'includes' | 'calls' | 'depends' | 'unresolved';
+  /** import = static (import_*), include = dynamic (include_*). */
+  mode?: 'import' | 'include';
+  conditional: boolean; // task/play has when:
+}
+
+export interface FlowGraph {
+  nodes: FlowNode[];
+  edges: FlowEdge[];
+}
+
 // ── Webview message protocol ──
 
 export type ExtToWebview =
@@ -98,11 +127,13 @@ export type ExtToWebview =
   | { type: 'setPrecedence'; data: PrecedenceResult }
   | { type: 'setInventories'; data: string[] }
   | { type: 'setVariableList'; data: string[] }
-  | { type: 'setTheme'; data: 'light' | 'dark' };
+  | { type: 'setTheme'; data: 'light' | 'dark' }
+  | { type: 'setFlow'; data: FlowGraph };
 
 export type WebviewToExt =
   | { type: 'traceVariable'; name: string }
   | { type: 'jumpToSource'; file: string; line: number }
   | { type: 'selectInventory'; file: string }
   | { type: 'resolvePrecedence'; name: string; inventory: string }
+  | { type: 'requestFlow' }
   | { type: 'ready' };
