@@ -4,6 +4,8 @@ A VS Code extension that traces an Ansible variable across inventory, roles, pla
 
 Existing Ansible visualizers graph role and task relationships. This one follows variables: where a value is defined, how Ansible's precedence ranks the definitions, and where it is used.
 
+See [CHANGELOG.md](CHANGELOG.md) for release notes.
+
 **Status: alpha.** The scanner is verified against [`opennebula/one-deploy`](https://github.com/OpenNebula/one-deploy). The VS Code UI is still being tested.
 
 ## Features
