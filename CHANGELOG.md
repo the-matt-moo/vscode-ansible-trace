@@ -3,7 +3,7 @@
 All notable changes to this project are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [0.2.0] - 02-11-2026
 
 ### Added
 - **Flow tab:** maps playbook -> role -> task file relationships from `roles:`, `import_*`/`include_*`, and meta `dependencies:`. Dynamic references that cannot be resolved are shown as red dashed nodes.
